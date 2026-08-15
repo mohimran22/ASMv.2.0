@@ -99,6 +99,11 @@
 @endsection
 
 @push('js')
+<script>
+    console.log('APP URL:', @json(config('app.url')));
+    console.log('Current URL:', window.location.href);
+    console.log('License URL:', @json(url('/licenses')));
+</script>
     <script>
         $(function() {
             const table = $('#tableLicenses').DataTable({
