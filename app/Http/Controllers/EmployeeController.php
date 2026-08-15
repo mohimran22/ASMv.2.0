@@ -23,12 +23,13 @@ use Illuminate\Support\Facades\Validator;
 
 class EmployeeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+    public function index()
     {
-        if ($request->ajax()) {
+        return view('employees.index');
+    }
+    public function datatable(Request $request)
+    {
+        // if ($request->ajax()) {
             $employees = $this->getJoinedEmployees();
 
             return DataTables::of($employees)
@@ -118,10 +119,6 @@ class EmployeeController extends Controller
 
                 ->rawColumns(['fullname', 'action', 'contract_letter_file', 'instructure_certificate'])
                 ->make(true);
-        }
-
-
-        return view('employees.index');
     }
 
     private function getJoinedEmployees()

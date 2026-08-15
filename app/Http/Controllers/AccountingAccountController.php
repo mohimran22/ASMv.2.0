@@ -11,51 +11,219 @@ use Yajra\DataTables\Facades\DataTables;
 
 class AccountingAccountController extends Controller
 {
-    public function index(Request $request)
-    {
-        $user = Auth::user();
+    public function index()
+{
+    return view('accounting.index');
+}
 
-        $query = AccountingAccount::with(['license', 'parent']);
+public function datatable(Request $request)
+{
+    $user = Auth::user();
 
-        if ($user->hasRole('Super-Admin')) {
-            // Lihat semua akun
-        } elseif ($user->hasRole('Pemilik Lisensi')) {
+    $query = AccountingAccount::query()
+        ->leftJoin(
+            'licenses',
+            'licenses.id',
+            '=',
+            'accounting_accounts.license_id'
+        )
+        ->select([
+            'accounting_accounts.*',
+            'licenses.license_type as license_type',
+            'licenses.name as license_name',
+        ]);
+
+    if ($user->hasRole('Super-Admin')) {
+
+        // Super Admin dapat melihat semua akun
+
+    } elseif ($user->hasRole('Pemilik Lisensi')) {
+
         $licenses = optional($user->licenses);
 
         if ($licenses?->isNotEmpty()) {
-            $query->whereIn('license_id', $licenses->pluck('id'));
+
+            $query->whereIn(
+                'accounting_accounts.license_id',
+                $licenses->pluck('id')
+            );
+
         } else {
             abort(403, 'Lisensi tidak ditemukan untuk pemilik lisensi.');
-        } 
-        
+        }
+
     } elseif ($user->hasRole('Akuntan')) {
-            $licenses = optional($user->employee)->licenses; // ← pakai relasi belongsToMany
 
-            if ($licenses && $licenses->count() > 0) {
-                $query->whereIn('license_id', $licenses->pluck('id'));
-            } else {
-                abort(403, 'Lisensi tidak ditemukan.');
-            }
+        $licenses = optional($user->employee)->licenses;
+
+        if ($licenses && $licenses->count() > 0) {
+
+            $query->whereIn(
+                'accounting_accounts.license_id',
+                $licenses->pluck('id')
+            );
+
         } else {
-            abort(403, 'Role Tidak diizinkan');
+            abort(403, 'Lisensi tidak ditemukan.');
         }
 
-        // ✅ Tambahkan filter lisensi aktif (kecuali Super Admin)
-        if (! $user->hasRole('Super-Admin')) {
-            $activeLicenseId = session('active_license_id');
+    } else {
 
-            if (!$activeLicenseId) {
-                abort(403, 'Silakan pilih lisensi aktif terlebih dahulu.');
+        abort(403, 'Role Tidak diizinkan');
+    }
+
+    if (!$user->hasRole('Super-Admin')) {
+
+        $activeLicenseId = session('active_license_id');
+
+        if (!$activeLicenseId) {
+            abort(403, 'Silakan pilih lisensi aktif terlebih dahulu.');
+        }
+
+        $query->where(
+            'accounting_accounts.license_id',
+            $activeLicenseId
+        );
+    }
+
+    return DataTables::eloquent($query)
+
+        ->addIndexColumn()
+
+        ->editColumn('license_type', function ($account) {
+            return $account->license_type ?? '-';
+        })
+
+        ->editColumn('license_name', function ($account) {
+            return $account->license_name ?? '-';
+        })
+
+        ->editColumn('account_code', function ($account) {
+            return $account->account_code ?? '-';
+        })
+
+        ->editColumn('account_name', function ($account) {
+            return $account->account_name ?? '-';
+        })
+
+        ->editColumn('category', function ($account) {
+            return $account->category ?? '-';
+        })
+
+        ->editColumn('sub_category', function ($account) {
+            return $account->sub_category ?? '-';
+        })
+
+        ->editColumn('initial_balance', function ($account) {
+            return number_format(
+                (float) $account->initial_balance,
+                2
+            );
+        })
+
+        ->editColumn('is_active', function ($account) {
+
+            if ($account->is_active) {
+                return '<span class="badge bg-success">Aktif</span>';
             }
 
-            $query->where('license_id', $activeLicenseId);
-        }
+            return '<span class="badge bg-secondary">Nonaktif</span>';
+        })
 
-        $accounts = $query->orderBy('account_code')->get();
+        ->addColumn('action', function ($account) {
+
+            $buttons = '';
+
+            if (auth()->user()->can('akun-akuntansi.ubah')) {
+
+                $buttons .= '
+                    <a href="' . route('accounting.edit', $account->id) . '"
+                       class="btn btn-warning btn-sm"
+                       title="Edit">
+                        <i class="ti ti-edit"></i>
+                    </a>
+                ';
+            }
+
+            if (auth()->user()->can('akun-akuntansi.hapus')) {
+
+                $buttons .= '
+                    <form action="' . route('accounting.destroy', $account->id) . '"
+                          method="POST"
+                          style="display:inline-block;">
+
+                        ' . csrf_field() . '
+
+                        ' . method_field('DELETE') . '
+
+                        <button
+                            type="submit"
+                            class="btn btn-danger btn-sm"
+                            onclick="return confirm(\'Hapus akun ini?\')"
+                            title="Hapus">
+
+                            <i class="ti ti-trash"></i>
+
+                        </button>
+                    </form>
+                ';
+            }
+
+            return $buttons;
+        })
+
+        ->rawColumns([
+            'is_active',
+            'action',
+        ])
+
+        ->make(true);
+}
+    // public function index(Request $request)
+    // {
+    //     $user = Auth::user();
+
+    //     $query = AccountingAccount::with(['license', 'parent']);
+
+    //     if ($user->hasRole('Super-Admin')) {
+    //         // Lihat semua akun
+    //     } elseif ($user->hasRole('Pemilik Lisensi')) {
+    //     $licenses = optional($user->licenses);
+
+    //     if ($licenses?->isNotEmpty()) {
+    //         $query->whereIn('license_id', $licenses->pluck('id'));
+    //     } else {
+    //         abort(403, 'Lisensi tidak ditemukan untuk pemilik lisensi.');
+    //     } 
+        
+    // } elseif ($user->hasRole('Akuntan')) {
+    //         $licenses = optional($user->employee)->licenses; // ← pakai relasi belongsToMany
+
+    //         if ($licenses && $licenses->count() > 0) {
+    //             $query->whereIn('license_id', $licenses->pluck('id'));
+    //         } else {
+    //             abort(403, 'Lisensi tidak ditemukan.');
+    //         }
+    //     } else {
+    //         abort(403, 'Role Tidak diizinkan');
+    //     }
+
+    //     // ✅ Tambahkan filter lisensi aktif (kecuali Super Admin)
+    //     if (! $user->hasRole('Super-Admin')) {
+    //         $activeLicenseId = session('active_license_id');
+
+    //         if (!$activeLicenseId) {
+    //             abort(403, 'Silakan pilih lisensi aktif terlebih dahulu.');
+    //         }
+
+    //         $query->where('license_id', $activeLicenseId);
+    //     }
+
+    //     $accounts = $query->orderBy('account_code')->get();
 
 
-        return view('accounting.index', compact('accounts'));
-    }
+    //     return view('accounting.index', compact('accounts'));
+    // }
 
 
     public function create()

@@ -36,7 +36,7 @@ Route::get('/', function () {
 });
 
 require __DIR__.'/auth.php';
-Auth::routes();
+// Auth::routes();
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -106,6 +106,8 @@ Route::middleware(['auth', 'permission:karyawan.ubah'])->group(function () {
 
 Route::middleware(['auth', 'role:Super-Admin|Karyawan|Pemilik Lisensi|Akuntan'])->group(function () {
     route::resource('/employees', EmployeeController::class)->only(['index', 'show', 'destroy']);
+        Route::post('/employees/datatable', [EmployeeController::class, 'datatable'])
+        ->name('employees.datatable');
 });
 
 Route::get('/employees/generate-nik/{licenseId}', [EmployeeController::class, 'generateNikAjax']);
@@ -132,9 +134,18 @@ Route::middleware(['auth', 'role:Super-Admin|Pemilik Lisensi|Akuntan|Siswa'])->g
     Route::resource('/students', StudentsController::class)->only(['index', 'show', 'destroy']);
 });
 
-Route::middleware(['auth', 'role:Super-Admin|Akuntan'])
-        ->resource('accounting', AccountingAccountController::class)
-         ->parameters(['accounting' => 'account']);
+Route::middleware(['auth', 'role:Super-Admin|Akuntan'])->group(function () {
+
+    Route::post(
+        'accounting/datatable',
+        [AccountingAccountController::class, 'datatable']
+    )->name('accounting.datatable');
+
+    Route::resource('accounting', AccountingAccountController::class)
+        ->parameters([
+            'accounting' => 'account'
+        ]);
+});
 
 Route::get('/journals/{journal}/print', [AccountingJournalController::class, 'print'])
     ->name('journals.print');

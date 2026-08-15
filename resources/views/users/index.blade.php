@@ -77,16 +77,7 @@
                 serverSide: true,
                 processing: true,
                 ajax: {
-                    url: 'https://asm.aharightbrain.com/users',
-                    type: 'GET',
-                    xhrFields: {
-                        withCredentials: true
-                    },
-                    error: function (xhr, error, thrown) {
-                        console.error("❌ AJAX Error:", error, thrown);
-                        console.log("📄 Response Text:", xhr.responseText);
-                        alert("Gagal memuat data! Cek console untuk detail error.");
-                    }
+                    url: '{{ route("users.index") }}',
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },

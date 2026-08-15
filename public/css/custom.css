@@ -6,7 +6,10 @@
   font-size: 0.9rem;
 }
 
-
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
 label.required::after {
   content: " *";
   color: #db2827;

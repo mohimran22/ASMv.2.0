@@ -808,41 +808,72 @@ public function trialBalance(Request $request)
         'activeLicenseId'
     ));
 }
+private function buildGroupedAccounts(
+    \Closure $journalFilter,
+    $licenseId = null
+) {
 
-private function buildGroupedAccounts(\Closure $journalFilter, $licenseId = null)
-{
     $accounts = AccountingAccount::query()
         ->where('is_parent', false)
-        ->when($licenseId, function ($q) use ($licenseId) {
-            $q->where('license_id', $licenseId);
+        ->when($licenseId, function ($query) use ($licenseId) {
+            $query->where('license_id', $licenseId);
         })
+        ->get();
+
+    $details = AccountingJournalDetail::query()
+        ->whereHas('journal', function ($query) use ($journalFilter, $licenseId) {
+
+            /*
+             * Filter journal yang sama dengan filter sebelumnya
+             */
+            $journalFilter($query);
+
+            /*
+             * Filter license langsung pada accounting_journals
+             */
+            if ($licenseId) {
+                $query->where('license_id', $licenseId);
+            }
+        })
+        ->selectRaw('
+            account_id,
+            COALESCE(SUM(debit), 0) AS debit,
+            COALESCE(SUM(credit), 0) AS credit
+        ')
+        ->groupBy('account_id')
         ->get()
-        ->map(function ($account) use ($journalFilter) {
+        ->keyBy('account_id');
 
-            $debit = AccountingJournalDetail::query()
-                ->where('account_id', $account->id)
-                ->whereHas('journal', $journalFilter)
-                ->sum('debit');
+    return $accounts
+        ->map(function ($account) use ($details) {
 
-            $credit = AccountingJournalDetail::query()
-                ->where('account_id', $account->id)
-                ->whereHas('journal', $journalFilter)
-                ->sum('credit');
+            $detail = $details->get($account->id);
+
+            $debit = (float) ($detail->debit ?? 0);
+            $credit = (float) ($detail->credit ?? 0);
 
             switch ($account->category) {
+
                 case 'AKTIVA':
                 case 'BEBAN':
+
                     $balance = $debit - $credit;
+
                     break;
 
                 case 'KEWAJIBAN':
                 case 'EKUITAS':
                 case 'PENDAPATAN':
+
                     $balance = $credit - $debit;
+
                     break;
 
                 default:
+
                     $balance = $debit - $credit;
+
+                    break;
             }
 
             return [
@@ -854,21 +885,85 @@ private function buildGroupedAccounts(\Closure $journalFilter, $licenseId = null
                 'credit'       => $credit,
                 'balance'      => $balance,
             ];
-        });
+        })
 
-    return $accounts
         ->groupBy('category')
+
         ->map(function ($catGroup) {
-            return $catGroup->groupBy('sub_category')->map(function ($subGroup) {
-                return [
-                    'accounts'        => $subGroup,
-                    'subtotalDebit'   => $subGroup->sum('debit'),
-                    'subtotalCredit'  => $subGroup->sum('credit'),
-                    'subtotalBalance' => $subGroup->sum('balance'),
-                ];
-            });
+
+            return $catGroup
+                ->groupBy('sub_category')
+                ->map(function ($subGroup) {
+
+                    return [
+                        'accounts'        => $subGroup,
+                        'subtotalDebit'   => $subGroup->sum('debit'),
+                        'subtotalCredit'  => $subGroup->sum('credit'),
+                        'subtotalBalance' => $subGroup->sum('balance'),
+                    ];
+                });
         });
 }
+// private function buildGroupedAccounts(\Closure $journalFilter, $licenseId = null)
+// {
+//     $accounts = AccountingAccount::query()
+//         ->where('is_parent', false)
+//         ->when($licenseId, function ($q) use ($licenseId) {
+//             $q->where('license_id', $licenseId);
+//         })
+//         ->get()
+//         ->map(function ($account) use ($journalFilter) {
+
+//             $debit = AccountingJournalDetail::query()
+//                 ->where('account_id', $account->id)
+//                 ->whereHas('journal', $journalFilter)
+//                 ->sum('debit');
+
+//             $credit = AccountingJournalDetail::query()
+//                 ->where('account_id', $account->id)
+//                 ->whereHas('journal', $journalFilter)
+//                 ->sum('credit');
+
+//             switch ($account->category) {
+//                 case 'AKTIVA':
+//                 case 'BEBAN':
+//                     $balance = $debit - $credit;
+//                     break;
+
+//                 case 'KEWAJIBAN':
+//                 case 'EKUITAS':
+//                 case 'PENDAPATAN':
+//                     $balance = $credit - $debit;
+//                     break;
+
+//                 default:
+//                     $balance = $debit - $credit;
+//             }
+
+//             return [
+//                 'account_code' => $account->account_code,
+//                 'account_name' => $account->account_name,
+//                 'category'     => $account->category,
+//                 'sub_category' => $account->sub_category,
+//                 'debit'        => $debit,
+//                 'credit'       => $credit,
+//                 'balance'      => $balance,
+//             ];
+//         });
+
+//     return $accounts
+//         ->groupBy('category')
+//         ->map(function ($catGroup) {
+//             return $catGroup->groupBy('sub_category')->map(function ($subGroup) {
+//                 return [
+//                     'accounts'        => $subGroup,
+//                     'subtotalDebit'   => $subGroup->sum('debit'),
+//                     'subtotalCredit'  => $subGroup->sum('credit'),
+//                     'subtotalBalance' => $subGroup->sum('balance'),
+//                 ];
+//             });
+//         });
+// }
 private function getBalanceSheetAccounts($startDate, $endDate, $licenseId = null)
 {
     return $this->buildGroupedAccounts(function ($query) use ($startDate, $endDate, $licenseId) {
