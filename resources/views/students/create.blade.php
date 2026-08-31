@@ -50,7 +50,7 @@
 
                                         <div class="col-md-6 mb-3">
                                             <label class="required">Pilih Lisensi</label>
-                                            <select name="license_id" class="form-select" required>
+                                            <select name="license_id" class="form-select select2" required>
                                                 <option value="">-- Pilih Lisensi --</option>
                                                 @foreach($licenses as $license)
                                                     <option value="{{ $license->id }}">{{ $license->name }}</option>
@@ -84,7 +84,7 @@
 
                                         <div class="col-md-6 mb-3">
                                             <label class="required">Jenis Kelamin </label>
-                                            <select name="gender" class="form-select" required>
+                                            <select name="gender" class="form-select select2" required>
                                                 <option value="">-- Pilih Jenis Kelamin --</option>
                                                 <option value="1">Laki - Laki</option>
                                                 <option value="2">Perempuan</option>
@@ -118,7 +118,7 @@
 
                                         <div class="col-md-6 mb-3">
                                             <label class="required" for="religion_id">Agama </label>
-                                            <select name="religion_id" class="form-select" required>
+                                            <select name="religion_id" class="form-select select2" required>
                                                 <option value="">-- Pilih Agama --</option>
                                                 @foreach($religions as $religion)
                                                     <option value="{{ $religion->id }}" {{ old('religion_id') == $religion->id ? 'selected' : '' }}>
@@ -137,7 +137,7 @@
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label>Email</label>
+                                            <label class="required">Email</label>
                                             <input type="text" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" >
                                             @error('email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -252,8 +252,8 @@
                                         </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label>Status </label>
-                                            <select name="status" class="form-select">
+                                            <label class="required">Status </label>
+                                            <select name="status" class="form-select select2">
                                                 <option value="">-- Pilih Status --</option>
                                                 <option value="Aktif">Aktif</option>
                                                 <option value="Alumni">Alumni</option>
@@ -267,7 +267,7 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label>Tau Darimana </label>
-                                            <select name="where_know" class="form-select">
+                                            <select name="where_know" class="form-select select2">
                                                 <option value="">-- Pilih Info --</option>
                                                 <option value="1">Teman/Keluarga</option>
                                                 <option value="2">Website AHA</option>
