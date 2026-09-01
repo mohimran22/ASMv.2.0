@@ -99,22 +99,19 @@
 @endsection
 
 @push('js')
-<script>
-    console.log('APP URL:', @json(config('app.url')));
-    console.log('Current URL:', window.location.href);
-    console.log('License URL:', @json(url('/licenses')));
-</script>
     <script>
         $(function() {
+            const isMobile = window.innerWidth < 576;
             const table = $('#tableLicenses').DataTable({
                 scrollY: '500px',
                 scrollX: true,
                 scrollCollapse: true,
-                fixedColumns: {
+                fixedColumns: !isMobile ? {
                     leftColumns: 4
-                },
+                } : false,
                 processing: true,
-                serverSide: true, 
+                serverSide: true,
+                responsive: false, 
                 ajax: '{{ route("licenses.index") }}',
                 // ajax: {
                 //     url: 'https://asm.aharightbrain.com/licenses', // ganti dengan URL API Laravel di Railway
