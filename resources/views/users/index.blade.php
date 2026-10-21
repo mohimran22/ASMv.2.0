@@ -5,7 +5,7 @@
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
-                <div class="col">
+                {{-- <div class="col">
                     <!-- Page pre-title -->
                     <div class="page-pretitle">
                         Overview
@@ -13,7 +13,7 @@
                     <h2 class="page-title">
                         Users
                     </h2>
-                </div>
+                </div> --}}
                 <!-- Page title actions -->
                 <div class="col-12 col-md-auto ms-auto d-print-none">
                     <div class="btn-list">
@@ -45,7 +45,7 @@
                     <div class="card">
                         <div class="card-header">
                             <p class="text-center mb-4" style="font-size: 1.4rem; font-weight: 400; font-family: 'Figtree', sans-serif;">
-                                 Users
+                                Daftar Pengguna
                             </p>
                         </div>
                         <div class="table-responsive">
@@ -68,6 +68,28 @@
             </div>
         </div>
     </div>
+@role('Super-Admin')
+<a href="{{ route('users.create') }}"
+   class="mobile-fab d-md-none">
+
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="26"
+         height="26"
+         viewBox="0 0 24 24"
+         stroke-width="2"
+         stroke="currentColor"
+         fill="none"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+
+    </svg>
+
+</a>
+@endrole
 @endsection
 
 @push('js')
@@ -86,7 +108,26 @@
                     { data: 'created_at', name: 'created_at'},
                     { data: 'action', name: 'action', orderable: false, searchable: false },
                 ],
-    
+                language: {
+                    search: "",
+                    searchPlaceholder: "Cari pengguna...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data",
+                    infoFiltered: "(difilter dari _MAX_ total data)",
+                    zeroRecords: "Data tidak ditemukan",
+                    paginate: {
+                        first: "Awal",
+                        last: "Akhir",
+                        next: "›",
+                        previous: "‹"
+                    }
+                },
+                initComplete: function () {
+                    const input = $('.dt-search input');
+                    input.removeClass('form-control-sm')
+                        .addClass('form-control');
+                }
             });
 
             // Delete user functionally

@@ -3,9 +3,13 @@
         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown"
            aria-label="Open user menu">
             <span class="avatar">
+                @if (auth()->user()->photo_url )
                     <img src="{{ auth()->user()->photo_url }}" 
                         alt="Foto Profil" 
                         style="width: 100%; height: 100%; object-fit: cover;">
+                @else
+                    <i class="ti ti-users text-gray-400 text-3xl"></i>
+                @endif
             </span>
             
             <div class="d-none d-xl-block ps-2">
@@ -35,7 +39,7 @@
             @endif
 
             <a href="{{ route('profile.edit') }}" class="dropdown-item">
-                <i class="ti ti-users"></i> Edit Profil
+                <i class="ti ti-users"></i> Ubah Kata Kunci
             </a>
             <a class="dropdown-item"
                href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

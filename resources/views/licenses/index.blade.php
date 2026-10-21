@@ -5,7 +5,7 @@
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
-                <div class="col">
+                {{-- <div class="col">
                     <!-- Page pre-title -->
                     <div class="page-pretitle">
                         Overview
@@ -13,7 +13,7 @@
                     <h2 class="page-title">
                         Lisensi
                     </h2>
-                </div>
+                </div> --}}
                 <!-- Page title actions -->
                 <div class="col-12 col-md-auto ms-auto d-print-none">
                     <div class="btn-list">
@@ -47,10 +47,10 @@
                     <div class="card">
                         <div class="card-header">
                             <p class="text-center mb-4">
-                                 Lisensi
+                                Daftar Lisensi
                             </p>
                         </div>
-                        <div class="table-wrapper">
+                        <div class="table-responsive">
                             <table id="tableLicenses" class="table nowrap w-100" >
                                 <thead>
                                     <tr>
@@ -96,6 +96,28 @@
             </div>
         </div>
     </div>
+@can('lisensi.tambah')
+<a href="{{ route('licenses.create') }}"
+   class="mobile-fab d-md-none">
+
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="26"
+         height="26"
+         viewBox="0 0 24 24"
+         stroke-width="2"
+         stroke="currentColor"
+         fill="none"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+
+    </svg>
+
+</a>
+@endcan
 @endsection
 
 @push('js')
@@ -113,18 +135,6 @@
                 serverSide: true,
                 responsive: false, 
                 ajax: '{{ route("licenses.index") }}',
-                // ajax: {
-                //     url: 'https://asm.aharightbrain.com/licenses', // ganti dengan URL API Laravel di Railway
-                //     type: 'GET',
-                //     xhrFields: {
-                //         withCredentials: true // biar cookie session kebawa
-                //     },
-                //     error: function (xhr, error, thrown) {
-                //         console.error("❌ AJAX Error:", error, thrown);
-                //         console.log("📄 Response Text:", xhr.responseText);
-                //         alert("Gagal memuat data! Cek console untuk detail error.");
-                //     }
-                // },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'license_id', name: 'license_id' },
@@ -158,7 +168,26 @@
                     { data: 'landing_page_student_registration', name: 'landing_page_student_registration' },
                     { data: 'action', name: 'action', orderable: false, searchable: false },
                 ],
-    
+                language: {
+                    search: "",
+                    searchPlaceholder: "Cari lisensi...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data",
+                    infoFiltered: "(difilter dari _MAX_ total data)",
+                    zeroRecords: "Data tidak ditemukan",
+                    paginate: {
+                        first: "Awal",
+                        last: "Akhir",
+                        next: "›",
+                        previous: "‹"
+                    }
+                },
+                initComplete: function () {
+                    const input = $('.dt-search input');
+                    input.removeClass('form-control-sm')
+                        .addClass('form-control');
+                }
             });
 
             // Delete user functionally

@@ -297,13 +297,37 @@ label {
     width: 100% !important; /* Paksa full width dalam kolom */
 }
 
+.mobile-fab{
 
+    position: fixed;
 
+    right: 18px;
+    bottom: 20px;
 
+    width: 56px;
+    height: 56px;
 
+    border-radius: 50%;
 
+    background: #1cb9ff;
+    color: #fff;
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
+    box-shadow: 0 10px 25px rgba(0,0,0,.18);
 
+    z-index: 999;
 
+    transition: .2s ease;
 
+    text-decoration: none;
+}
+
+.mobile-fab:hover{
+
+    transform: scale(1.05);
+
+    color: #fff;
+}
