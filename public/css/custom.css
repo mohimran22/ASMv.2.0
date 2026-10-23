@@ -1,4 +1,6 @@
-
+.page-title {
+  padding-left: 20px;
+} 
 .table td,
 .table th {
   font-family: 'Poppins', sans-serif;

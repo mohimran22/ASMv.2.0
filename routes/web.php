@@ -29,6 +29,8 @@ use App\Http\Controllers\JournalExportController;
 use App\Http\Controllers\Api\AccountingApiController;
 use App\Http\Controllers\Api\JournalApiController;
 use App\Http\Controllers\Api\LicenseSessionController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\PermissionController;
 use App\Models\License;
 
 Route::get('/', function () {
@@ -48,7 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 });
-
+Route::middleware(['auth', 'role:Super-Admin'])->group(function () {
+    Route::resource('/menus', MenuController::class);
+});
 Route::middleware(['auth', 'permission:lisensi.tambah'])->group(function () {
     Route::resource('/licenses', LicensesController::class)->only(['create', 'store']);
 });
@@ -200,9 +204,9 @@ Route::get('/ledger/export', [JournalExportController::class, 'exportLedger'])
 Route::get('/trial/export', [JournalExportController::class, 'exportTrialBalance'])
     ->name('trial.export');
 
-
-
-
+Route::middleware(['auth', 'role:Super-Admin'])->group(function () {
+    Route::resource('/permissions', PermissionController::class);
+});
 
 Route::patch('/notifications/{notification}/read', [LicenseNotificationController::class, 'markAsRead'])->name('notifications.read');
 

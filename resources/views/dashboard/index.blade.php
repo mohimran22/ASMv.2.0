@@ -1,7 +1,7 @@
 @extends('tablar::page')
 
 @section('content')
-<div class="container">
+<div class="container-xl">
     {{-- Header --}}
     <div class="bg-primary text-white p-4 rounded mb-4">
         @php
