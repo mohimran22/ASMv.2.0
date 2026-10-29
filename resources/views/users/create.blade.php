@@ -41,7 +41,7 @@
                         </div>
 
                         <div class="card-body">
-                            <form class="font-normal" action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
+                            <form class="font-normal" action="{{ route('users.store') }}" method="POST">
                                 @csrf
 
                                 <div class="row mb-4">
@@ -74,11 +74,18 @@
 
                                     <div class="col-md-6 mb-3">
                                         <label for="role">Role: *</label>
-                                        <select name="role" class="form-select" required>
-                                            @foreach (\Spatie\Permission\Models\Role::all() as $role)
-                                                <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                                        <select name="role" class="form-select @error('role') is-invalid @enderror" required>
+                                            <option value="">-- Pilih Role --</option>
+                                            @foreach ($roles as $roleName)
+                                                <option value="{{ $roleName }}"
+                                                    {{ old('role') == $roleName ? 'selected' : '' }}>
+                                                    {{ ucfirst($roleName) }}
+                                                </option>
                                             @endforeach
                                         </select>
+                                        @error('role')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
 

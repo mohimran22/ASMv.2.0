@@ -21,7 +21,7 @@
                 <div class="col-12 col-md-auto ms-auto d-print-none">
                     <div class="btn-list">
                   
-                        <a href=" {{ route("users.index") }} " class="btn btn-primary text-white d-none d-sm-inline-block" >
+                        <a href="{{ route('users.index') }}" class="btn btn-primary text-white d-none d-sm-inline-block" >
                             Kembali
                         </a>
                         
@@ -44,7 +44,7 @@
                         </div>
 
                         <div class="card-body">
-                            <form class="font-normal" action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data">
+                            <form class="font-normal" action="{{ route('users.update', $user) }}" method="POST">
                                 @csrf
                                 @method('put')
 
@@ -72,8 +72,12 @@
                                 <div class="row mb-4">
                                     <div class="col-md-6 mb-3">
                                         <label for="password">Password:</label>
-                                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" value="{{ old('password', $user->password) }}"
-                                         @if(auth()->user()->hasRole('Pemilik Lisensi')) readonly @endif>
+                                        <input type="password"
+                                            class="form-control @error('password') is-invalid @enderror"
+                                            id="password" name="password"
+                                            placeholder="Kosongkan jika tidak ingin mengubah password"
+                                            autocomplete="new-password"
+                                            @if(auth()->user()->hasRole('Pemilik Lisensi')) readonly @endif>
                                         @error('password')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -81,15 +85,18 @@
 
                                     <div class="col-md-6 mb-3">
                                         <label for="role" class="required">Role: </label>
-                                        <select name="role" class="form-select" required>
+                                        <select name="role" class="form-select @error('role') is-invalid @enderror" required>
                                             <option value="">-- Pilih Role --</option>
-                                            @foreach (\Spatie\Permission\Models\Role::all() as $role)
-                                                <option value="{{ $role->name }}"
-                                                    {{ $user->roles->first() && $user->roles->first()->name == $role->name ? 'selected' : '' }}>
-                                                    {{ ucfirst($role->name) }}
+                                            @foreach ($roles as $roleName)
+                                                <option value="{{ $roleName }}"
+                                                    {{ old('role', $user->roles->first()?->name) == $roleName ? 'selected' : '' }}>
+                                                    {{ ucfirst($roleName) }}
                                                 </option>
                                             @endforeach
                                         </select>
+                                        @error('role')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
                                 </div>
 
