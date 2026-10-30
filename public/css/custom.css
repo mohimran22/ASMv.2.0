@@ -245,8 +245,15 @@ label {
     .dt-container .dt-length { flex: 0 0 auto; }
     .dt-container .dt-search { flex: 1 1 auto; min-width: 0; }
     .dt-container .dt-search input { width: 100%; margin-left: 0; }
-    .dt-length label { display: none; }
-    .dt-length select { font-size: .875rem; margin: 0 !important; width: auto; }
+    .dt-length label {
+        font-size: 0;
+        gap: 0;
+    }
+    .dt-length select {
+        font-size: .875rem;
+        margin: 0 !important;
+        width: auto;
+    }
 }
 /* Menu aktif */
 .app-sidebar .nav-link.active {
