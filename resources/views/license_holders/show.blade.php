@@ -1,4 +1,4 @@
-@extends('tablar::page') {{-- Atau sesuaikan dengan layout Tabler kamu --}}
+@extends('tablar::page')
 
 @section('content')
 <div class="page-body">
@@ -87,8 +87,10 @@ $(document).ready(function () {
         $container.html('<div class="text-center p-3">Memuat...</div>');
 
         // Load konten via AJAX
-        $.get(url.replace(/^http:/, 'https:'), function (res) {
-        $container.html(res);
+        const path = new URL(url, window.location.origin).pathname;
+
+        $.get(path, function (res) {
+            $container.html(res);
         }).fail(function () {
             $container.html('<div class="alert alert-danger">Gagal memuat data.</div>');
         });

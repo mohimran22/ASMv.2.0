@@ -69,7 +69,10 @@ class LicensesController extends Controller
 
                     return '<span class="text-muted">Belum ada</span>';
                 })
-
+                ->editColumn('name', function ($row) {
+                    $url = route('licenses.edit', $row->id); // Ganti dengan route detailmu
+                    return '<a href="'.$url.'">'.e($row->name).'</a>';
+                })
                 ->addColumn('instagram', fn($row) => $this->linkOrDash($row->instagram))
                 ->addColumn('facebook_page', fn($row) => $this->linkOrDash($row->facebook_page))
                 ->addColumn('tiktok', fn($row) => $this->linkOrDash($row->tiktok))
@@ -106,7 +109,7 @@ class LicensesController extends Controller
                     }
                     return $buttons;
                 })
-                ->rawColumns(['action', 'status', 'instagram', 'facebook_page', 'tiktok', 'youtube', 'google_maps', 'landing_page_student_registration', 'contract_document', 'document_form'])
+                ->rawColumns(['action', 'status', 'instagram', 'facebook_page', 'tiktok', 'youtube', 'name', 'google_maps', 'landing_page_student_registration', 'contract_document', 'document_form'])
                 ->make(true);
         }
 

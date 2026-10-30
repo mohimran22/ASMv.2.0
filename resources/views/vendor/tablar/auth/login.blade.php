@@ -41,7 +41,7 @@
                                    autocomplete="off">
 
                             <span class="input-group-text">
-                                <a href="#" id="togglePassword" class="link-secondary" data-bs-toggle="tooltip" title="Show password" aria-label="Show password">
+                                <a href="#" id="togglePassword" class="link-secondary" title="Show password" aria-label="Show password">
                                 <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                     <circle cx="12" cy="12"r="2"/>
@@ -64,43 +64,24 @@
                         </div>
                     </div>
 
-                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
                     <script>
-                        // Tooltip init
-                        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                        tooltipTriggerList.map(function (tooltipTriggerEl) {
-                        return new bootstrap.Tooltip(tooltipTriggerEl);
-                        });
-
-                        // Show/hide password toggle
                         const passwordInput = document.getElementById('password');
                         const togglePassword = document.getElementById('togglePassword');
                         const eyeIcon = document.getElementById('eyeIcon');
                         const eyeOffIcon = document.getElementById('eyeOffIcon');
 
                         togglePassword.addEventListener('click', function (e) {
-
                             e.preventDefault();
 
-                            const isPassword = passwordInput.getAttribute('type') === 'password';
-                            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                            const isPassword = passwordInput.type === 'password';
+                            passwordInput.type = isPassword ? 'text' : 'password';
 
                             eyeIcon.style.display = isPassword ? 'none' : 'inline';
                             eyeOffIcon.style.display = isPassword ? 'inline' : 'none';
 
                             const title = isPassword ? 'Hide password' : 'Show password';
-
-                            // Ubah atribut untuk aksesibilitas & tooltip dasar
                             togglePassword.setAttribute('aria-label', title);
-                            togglePassword.setAttribute('title', title); // Ini penting untuk Bootstrap tooltip
-
-                            const tooltip = bootstrap.Tooltip.getInstance(togglePassword);
-                            if (tooltip) {
-                                tooltip.setContent({ '.tooltip-inner': newTitle });
-                            }
-
-                            // Update tooltip manually (needed for Bootstrap 5)
-                            bootstrap.Tooltip.getInstance(togglePassword)?.setContent({ '.tooltip-inner': title });
+                            togglePassword.setAttribute('title', title);
                         });
                     </script>
                    
@@ -112,6 +93,8 @@
             </div>
             
         </div>
-       
+        <div class="text-center text-secondary mt-3 small">
+            &copy; {{ date('Y') }} AHA Right Brain. Hak cipta dilindungi.
+        </div>
     </div>
 @endsection

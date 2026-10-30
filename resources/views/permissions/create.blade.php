@@ -5,7 +5,7 @@
     <div class="container-xl">
         <div class="row align-items-center">
             <div class="col d-flex align-items-center">
-                <a href="{{ route('permissions.index') }}" class="btn btn-primary d-flex align-items-center">
+                <a href="{{ route('permissions.index') }}" class="btn btn-primary d-flex align-items-center" style="margin-left:20px;">
                     <i class="ti ti-arrow-left"></i>
                 </a>
                 
@@ -23,36 +23,39 @@
                     <form action="{{ route('permissions.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="guard_name" value="web">
-                    <div class="mb-3">
-                        <label class="form-label">Nama Permission</label>
-                        <input
-                            type="text"
-                            name="name"
-                            class="form-control @error('name') is-invalid @enderror"
-                            value="{{ old('name') }}"
-                            placeholder="contoh: tambah data user"
-                            required>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Nama Permission</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    class="form-control @error('name') is-invalid @enderror"
+                                    value="{{ old('name') }}"
+                                    placeholder="contoh: tambah data user"
+                                    required>
 
-                        @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nama Kelompok</label>
-                        <input
-                            type="text"
-                            name="modules"
-                            class="form-control @error('modules') is-invalid @enderror"
-                            value="{{ old('modules') }}"
-                            placeholder="contoh: User"
-                            required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Nama Kelompok</label>
+                                <input
+                                    type="text"
+                                    name="modules"
+                                    class="form-control @error('modules') is-invalid @enderror"
+                                    value="{{ old('modules') }}"
+                                    placeholder="contoh: User"
+                                    required>
 
-                        @error('modules')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                        <button type="submit" class="btn btn-success">Simpan</button>
-                        <a href="{{ route('permissions.index') }}" class="btn btn-secondary">Batal</a>
+                                @error('modules')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success">Simpan</button>
+                        </div>
                     </form>
                 </div>
             </div>
