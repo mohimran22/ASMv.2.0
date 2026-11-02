@@ -44,8 +44,15 @@
             <a class="dropdown-item"
                href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 <i class="ti ti-logout"></i>
-                {{ __('tablar::tablar.log_out') }}
+                {{ __('Keluar') }}
             </a>
+
+            <form id="logout-form" action="{{ $logout_url }}" method="POST" style="display: none;">
+                @if(config('tablar.logout_method'))
+                    {{ method_field(config('tablar.logout_method')) }}
+                @endif
+                {{ csrf_field() }}
+            </form>
 
         </div>
     </div>

@@ -19,9 +19,9 @@
             </div>
         </div>
 
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        {{-- <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
             @csrf
-        </form>
+        </form> --}}
         
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
