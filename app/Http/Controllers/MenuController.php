@@ -35,12 +35,12 @@ public function index(Request $request)
                                         <i class="ti ti-edit"></i>
                                     </a>';
                     }
-                    if (auth()->user()->can('lihat data menu')) {
-                        $buttons .= '<a href="' . route('menus.show', $menu->id) . '" class="btn btn-icon btn-sm btn-ruka me-1" title="Lihat">
-                                        <i class="ti ti-eye"></i>
-                                    </a>';
+                    // if (auth()->user()->can('lihat data menu')) {
+                    //     $buttons .= '<a href="' . route('menus.show', $menu->id) . '" class="btn btn-icon btn-sm btn-ruka me-1" title="Lihat">
+                    //                     <i class="ti ti-eye"></i>
+                    //                 </a>';
 
-                    }
+                    // }
                     if (auth()->user()->can('hapus data menu')) {
                         $buttons .= '<button data-id="' . $menu->id . '" class="btn btn-icon btn-sm btn-danger delete-menu" title="Hapus">
                                         <i class="ti ti-trash"></i>
