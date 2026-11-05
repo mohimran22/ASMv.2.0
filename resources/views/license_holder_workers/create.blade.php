@@ -43,10 +43,7 @@
         <div class="row align-items-center g-2">
             <div class="col">
                 <div class="d-flex align-items-center">
-                    <a href="{{ $backUrl }}" class="btn btn-icon btn-primary me-2" aria-label="Kembali">
-                        <i class="ti ti-arrow-left"></i>
-                    </a>
-                    <h2 class="page-title mb-0">Tambah Data Pekerjaan</h2>
+                    <h2>Tambah Data Pekerjaan</h2>
                 </div>
             </div>
         </div>
