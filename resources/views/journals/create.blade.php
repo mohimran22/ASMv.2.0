@@ -1,149 +1,189 @@
 @extends('tablar::page')
 
 @section('content')
-<div class="container">
-    <h2>Tambah Jurnal</h2>
+    <style>
+        /* Select2 menyembunyikan <select> asli (1px, absolute). Pastikan aturan lebar
+           .jurnal-table .form-select tidak ikut melebarkan select tersembunyi itu,
+           karena itu yang membuat halaman bisa scroll horizontal. */
+        .jurnal-table-wrapper { position: relative; }
+        .jurnal-table td { position: relative; }
+        .jurnal-table td select.select2-hidden-accessible {
+            left: 0;
+            top: 0;
+            width: 1px !important;
+            height: 1px !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+    </style>
 
-    {{-- Alert Success --}}
-    @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    {{-- Alert Errors --}}
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>Terjadi Kesalahan!</strong>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-
-    {{-- Form --}}
-    <form action="{{ route('journals.store') }}" method="POST" enctype="multipart/form-data">
-        @csrf
-
-            <div class="row mb-3 align-items-center">
-                {{-- Filter Lisensi (hanya untuk Super Admin) --}}
-                @if(auth()->user()->hasRole('Super-Admin'))
-                    <div class="col-md-4 mb-3">
-                        <label for="license_id" class="form-label required">Filter Lisensi</label>
-                        <select name="license_id" id="license_id" class="form-select select2" required>
-                            <option value="">-- Pilih Lisensi --</option>
-                            @foreach ($licenses as $license)
-                                <option value="{{ $license->id }}" 
-                                    {{ $activeLicenseId == $license->id ? 'selected' : '' }}>
-                                    {{ $license->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                @else
-                    {{-- Kalau bukan Super Admin, tetap pakai hidden --}}
-                    <input type="hidden" name="license_id" value="{{ $activeLicenseId }}">
-                @endif
-
-                {{-- No Transaksi --}}
-                <div class="col-md-4 mb-3">
-                    <label for="journal_code" class="required">No Transaksi</label>
-                    <input type="text" id="journal_code" name="journal_code" 
-                        class="form-control" value="{{ $journalCode }}" readonly>
-                </div>
-
-                {{-- Tanggal Transaksi --}}
-                <div class="col-md-4 mb-3">
-                    <label for="transaction_date" class="required">Tanggal Transaksi</label>
-                    <input type="date" id="transaction_date" name="transaction_date" class="form-control" required>
-                    <small id="period-warning" class="text-danger d-none">
-                        ⚠️ Periode sudah ditutup
-                    </small>
+    <div class="page-header d-print-none mb-4">
+        <div class="container-xl">
+            <div class="row align-items-center">
+                <div class="col d-flex align-items-center">
+                    <a href="{{ route('journals.index') }}" class="btn btn-primary d-flex align-items-center">
+                        <i class="ti ti-arrow-left"></i>
+                    </a>      
+                        <h2 class="page-title mb-0">Tambah Jurnal</h2> 
                 </div>
             </div>
-  
-        <h5>Detail Akun</h5>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th style="width:20%">Akun</th>
-                        <th style="width:20%">Deskripsi</th>
-                        <th style="width:20%">User</th>
-                        <th style="width:10%">Debit</th>
-                        <th style="width:10%">Kredit</th>
-                        <th style="width:5%">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="detail-rows">
-                    <tr>
-                        <td>
-                            <select name="details[0][account_id]" class="form-select select2 account-select" data-row="0" required>
-                                <option value="account">-- Pilih Akun --</option>
-                                    @foreach ($accounts as $account)
-                                        <option value="{{ $account->id }}"
-                                            data-code="{{ $account->account_code }}"
-                                            data-name="{{ $account->account_name }}"
-                                            data-person-type="{{ $account->person_type }}">
-                                            {{ $account->account_code }} - {{ $account->account_name }}
-                                        </option>
-                                    @endforeach
-                            </select>
-                        </td>
-                        <td><input type="text" name="details[0][description]" class="form-control"></td>
-                        <td>
-                            <select name="details[0][person]" class="form-select select2 user-select" data-row="0">
-                                <option value="">-- Pilih User --</option>
-                            </select>
-                        </td>
-                        <td><input type="number" step="0.01" name="details[0][debit]" class="form-control debit-input"></td>
-                        <td><input type="number" step="0.01" name="details[0][credit]" class="form-control credit-input"></td>
-                        <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
-                                <i class="ti ti-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-primary text-white">Tambah Baris</button></td>
-                    </tr>
-                    <tr>
-                        <th colspan="3">Subtotal</th>
-                        <th id="subtotal-debit">0</th>
-                        <th id="subtotal-credit">0</th>
-                        <th colspan="3"></th>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <div id="balance-status" class="mt-2 fw-bold text-danger">❌ Tidak Seimbang</div>
-
-        <div class="col-md-4 mb-3">
-            <label for="description">Keterangan</label>
-            <textarea name="description" class="form-control"></textarea>
         </div>
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            @if (session('success'))
+                                <div class="alert alert-success">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
 
-        <div class="col-md-4 mb-3">
-            <label for="enclosure" class="form-label">Lampiran</label>
-            <input type="file" name="enclosure" class="form-control">
-            @error('enclosure')
-                <small class="text-danger">{{ $message }}</small>
-            @enderror
+                            @if ($errors->any())
+                                <div class="alert alert-danger">
+                                    <strong>Terjadi Kesalahan!</strong>
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <form action="{{ route('journals.store') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+
+                                    <div class="row mb-3 align-items-center">
+                                        {{-- Filter Lisensi (hanya untuk Super Admin) --}}
+                                        @if(auth()->user()->hasRole('Super-Admin'))
+                                            <div class="col-md-4 mb-3">
+                                                <label for="license_id" class="form-label required">Filter Lisensi</label>
+                                                <select name="license_id" id="license_id" class="form-select select2" required>
+                                                    <option value="">-- Pilih Lisensi --</option>
+                                                    @foreach ($licenses as $license)
+                                                        <option value="{{ $license->id }}" 
+                                                            {{ $activeLicenseId == $license->id ? 'selected' : '' }}>
+                                                            {{ $license->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        @else
+                                            {{-- Kalau bukan Super Admin, tetap pakai hidden --}}
+                                            <input type="hidden" name="license_id" value="{{ $activeLicenseId }}">
+                                        @endif
+
+                                        {{-- No Transaksi --}}
+                                        <div class="col-md-4 mb-3">
+                                            <label for="journal_code" class="required">No Transaksi</label>
+                                            <input type="text" id="journal_code" name="journal_code" 
+                                                class="form-control" value="{{ $journalCode }}" readonly>
+                                        </div>
+
+                                        {{-- Tanggal Transaksi --}}
+                                        <div class="col-md-4 mb-3">
+                                            <label for="transaction_date" class="required">Tanggal Transaksi</label>
+                                            <input type="date" id="transaction_date" name="transaction_date" class="form-control" required>
+                                            <small id="period-warning" class="text-danger d-none">
+                                                ⚠️ Periode sudah ditutup
+                                            </small>
+                                        </div>
+                                    </div>
+                        
+                                <h5>Detail Akun</h5>
+                                <div class="jurnal-table-wrapper">
+                                    <small class="text-muted d-md-none d-block mb-1">Geser ke samping untuk melihat semua kolom →</small>
+                                    <table class="table table-bordered jurnal-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Akun</th>
+                                                <th>Deskripsi</th>
+                                                <th>User</th>
+                                                <th>Debit</th>
+                                                <th>Kredit</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detail-rows">
+                                            <tr>
+                                                <td>
+                                                    <select name="details[0][account_id]" class="form-select select2 account-select" data-row="0" required>
+                                                        <option value="account">-- Pilih Akun --</option>
+                                                            @foreach ($accounts as $account)
+                                                                <option value="{{ $account->id }}"
+                                                                    data-code="{{ $account->account_code }}"
+                                                                    data-name="{{ $account->account_name }}"
+                                                                    data-person-type="{{ $account->person_type }}">
+                                                                    {{ $account->account_code }} - {{ $account->account_name }}
+                                                                </option>
+                                                            @endforeach
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" name="details[0][description]" class="form-control"></td>
+                                                <td>
+                                                    <select name="details[0][person]" class="form-select select2 user-select" data-row="0">
+                                                        <option value="">-- Pilih User --</option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="number" step="0.01" name="details[0][debit]" class="form-control debit-input"></td>
+                                                <td><input type="number" step="0.01" name="details[0][credit]" class="form-control credit-input"></td>
+                                                <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-primary text-white">Tambah Baris</button></td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="3">Subtotal</th>
+                                                <th id="subtotal-debit">0</th>
+                                                <th id="subtotal-credit">0</th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                    @php
+                                        $isBalanced = $journal->details->sum('debit') == $journal->details->sum('credit');
+                                    @endphp
+                                    <div id="balance-status" 
+                                        class="mt-2 fw-bold {{ $isBalanced ? 'text-success' : 'text-danger' }}">
+                                        {{ $isBalanced ? '✅ Seimbang' : '❌ Tidak Seimbang' }}
+                                    </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="description">Keterangan</label>
+                                    <textarea name="description" class="form-control"></textarea>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="enclosure" class="form-label">Lampiran</label>
+                                    <input type="file" name="enclosure" class="form-control">
+                                    @error('enclosure')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-success text-white">Simpan Data</button>
+                                </div>
+
+                                @if(!auth()->user()->hasRole('Super-Admin'))
+                                    <input type="hidden" id="activeLicenseId" value="{{ $activeLicenseId }}">
+                                @endif
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="text-end">
-            <button type="submit" class="btn btn-success text-white">Simpan</button>
-        </div>
-
-        @if(!auth()->user()->hasRole('Super-Admin'))
-            <input type="hidden" id="activeLicenseId" value="{{ $activeLicenseId }}">
-        @endif
-
-    </form>
-</div>
+    </div>
 @endsection
 
 @push('js')
@@ -151,7 +191,7 @@
 <script>
 $(document).ready(function () {
     /** 🔹 Inisialisasi Select2 global */
-    $('.select2').select2({ placeholder: "-- Pilih --", width: '100%' });
+    $('.select2').select2({ width: '100%' });
 
     let accountsData = [];
 
@@ -399,11 +439,12 @@ $(document).ready(function () {
         $('#subtotal-debit').text(totalDebit.toLocaleString('id-ID'));
         $('#subtotal-credit').text(totalCredit.toLocaleString('id-ID'));
 
-        if (totalDebit === totalCredit && totalDebit > 0) {
-            $('#balance-status').text('✅ Seimbang').css('color', 'green');
-        } else {
-            $('#balance-status').text('❌ Tidak Seimbang').css('color', 'red');
-        }
+        const isBalanced = totalDebit === totalCredit;
+
+        $('#balance-status')
+            .text(isBalanced ? '✅ Seimbang' : '❌ Tidak Seimbang')
+            .toggleClass('text-success', isBalanced)
+            .toggleClass('text-danger', !isBalanced);
     }
 
     /** ======================================================

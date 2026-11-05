@@ -1,6 +1,26 @@
 @extends('tablar::page')
 
 @section('content')
+    <style>
+        /* Tombol aksi selalu sejajar (satu baris), termasuk di mobile */
+        #journals-table td .action-buttons,
+        #journals-table td .action-buttons > div,
+        #journals-table td .action-buttons .btn-list,
+        #journals-table td .action-buttons .d-grid {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center;
+            gap: .25rem;
+        }
+        #journals-table td .action-buttons .btn {
+            display: inline-flex;
+            width: auto;
+            margin: 0;
+            flex-shrink: 0;
+        }
+    </style>
+
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
@@ -83,9 +103,17 @@
 @push('js')
 <script>
 $(function () {
+    const isMobile = window.innerWidth < 576;
     const table = $('#journals-table').DataTable({
+        scrollY: '500px',
+        scrollX: true,
+        scrollCollapse: true,
+        fixedColumns: !isMobile ? {
+            leftColumns: 0
+        } : false,
         processing: true,
         serverSide: true,
+        responsive: false,
         ajax: '{{ route("journals.index") }}',
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -94,7 +122,13 @@ $(function () {
             { data: 'journal_code', name: 'accounting_journals.journal_code' },
             { data: 'transaction_date', name: 'accounting_journals.transaction_date' },
             { data: 'creator', name: 'users.name' },
-            { data: 'action', name: 'action', orderable: false, searchable: false },
+            {
+                data: 'action', name: 'action', orderable: false, searchable: false,
+                className: 'text-nowrap',
+                render: function (data, type) {
+                    return type === 'display' ? '<div class="action-buttons">' + data + '</div>' : data;
+                }
+            },
         ],
         language: {
             search: "",

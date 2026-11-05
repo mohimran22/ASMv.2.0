@@ -102,7 +102,7 @@ class AccountingJournalController extends Controller
     return view('journals.index');
 }
 
-    public function create(Request $request)
+    public function create(Request $request, AccountingJournal $journal)
 {
     $user = Auth::user();
 
@@ -180,7 +180,7 @@ class AccountingJournalController extends Controller
     : null; 
 
         return view('journals.create', compact(
-            'accounts', 'licenses', 'journalCode', 'activeLicenseId', 'students', 'employees', 'licenseholders', 'licenseList', 'pusatUserId', 'pusatUserName', 'openPeriod'
+            'accounts', 'journal', 'licenses', 'journalCode', 'activeLicenseId', 'students', 'employees', 'licenseholders', 'licenseList', 'pusatUserId', 'pusatUserName', 'openPeriod'
         ));
 }
 

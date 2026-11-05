@@ -1,209 +1,250 @@
 @extends('tablar::page')
 
 @section('content')
-<div class="container">
-    <h1>Edit Jurnal</h1>
-
-    <form action="{{ route('journals.update', $journal->id) }}" method="POST" enctype="multipart/form-data">
-        @csrf
-        @method('PUT')
-
-        
-        <div class="row mb-3 align-items-center">
-            @if(auth()->user()->hasRole('Super-Admin'))
-                <div class="col-md-4 mb-3">
-                    <label for="license_id" class="form-label">Pilih Lisensi</label>
-                    <select name="license_id" id="license_id" class="form-select" disabled>
-                        @foreach ($licenses as $license)
-                            <option value="{{ $license->id }}" 
-                                {{ $journal->license_id == $license->id ? 'selected' : '' }}>
-                                {{ $license->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <input type="hidden" name="license_id" value="{{ $journal->license_id }}">
+    <div class="page-header d-print-none mb-4">
+        <div class="container-xl">
+            <div class="row align-items-center">
+                <div class="col d-flex align-items-center">
+                    <a href="{{ route('journals.index') }}" class="btn btn-primary d-flex align-items-center">
+                        <i class="ti ti-arrow-left"></i>
+                    </a>      
+                        <h2 class="page-title mb-0">Ubah Jurnal</h2> 
                 </div>
-            @endif
-
-            <div class="col-md-4 mb-3">
-                <label for="journal_code" class="required">No Transaksi</label>
-                <input type="text" name="journal_code" 
-                    class="form-control" value="{{ old('journal_code', $journal->journal_code) }}" readonly>
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label for="transaction_date">Tanggal Transaksi</label>
-                <input type="date" name="transaction_date" class="form-control"
-                    value="{{ old('transaction_date', $journal->transaction_date) }}" required>
             </div>
         </div>
-
-        <h4>Detail Akun</h4>
-        <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th style="width:20%">Akun</th>
-                <th style="width:20%">Deskripsi</th>
-                <th style="width:20%">User</th>
-                <th style="width:10%">Debit</th>
-                <th style="width:10%">Kredit</th>
-                <th style="width:5%">Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="detail-rows">
-            @if(isset($journal) && $journal->details)
-                @foreach ($journal->details as $i => $detail)
-                    <tr>
-                        {{-- Pilih Akun --}}
-                        <td>
-                            <select name="details[{{ $i }}][account_id]" 
-                                    class="form-select account-select" 
-                                    data-row="{{ $i }}" required>
-                                <option value="{{ $detail->account_id }}" 
-                                        data-person-type="{{ $detail->account->person_type }}" 
-                                        selected>
-                                    {{ $detail->account->account_code }} - {{ $detail->account->account_name }}
-                                </option>
-                            </select>
-                        </td>
-
-                        {{-- Deskripsi --}}
-                        <td>
-                            <input type="text" 
-                                name="details[{{ $i }}][description]" 
-                                class="form-control"
-                                value="{{ old("details.$i.description", $detail->description) }}">
-                        </td>
-
-                        <td>
-                            <select name="details[{{ $i }}][person]" 
-                                    class="form-control select2 user-select" 
-                                    data-row="{{ $i }}" 
-                                    data-selected="{{ $detail->person ?? '' }}">
-                                <option value="">-- Pilih User --</option>
-                                @php
-                                    if ($detail->person_type === 'student') {
-                                        $users = $students;
-                                    } elseif ($detail->person_type === 'employee') {
-                                        $users = $employees;
-                                    } elseif ($detail->person_type === 'license') {
-                                        $users = $licenseList;
-                                    } else {
-                                        $users = collect();
-                                    }
-                                @endphp
-                                @foreach ($users as $u)
-                                    <option value="{{ $u->id }}" {{ $u->id == $detail->person ? 'selected' : '' }}>
-                                        {{ $u->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            @if($detail->person)
-                                <input type="hidden" name="details[{{ $i }}][person]" value="{{ $detail->person }}">
+    </div>
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            @if (session('success'))
+                                <div class="alert alert-success">
+                                    {{ session('success') }}
+                                </div>
                             @endif
-                        </td>
 
-                        {{-- <td>
-                                <select name="details[{{ $i }}][person]" 
-                                        class="form-select user-select" 
-                                        data-row="{{ $i }}" 
-                                        data-selected="{{ $detail->person_id }}">
-                                    @if($detail->person)
-                                        <option value="{{ $detail->person_id }}" selected>
-                                            {{ $detail->person->name }}
-                                        </option>
+                            @if ($errors->any())
+                                <div class="alert alert-danger">
+                                    <strong>Terjadi Kesalahan!</strong>
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                            <form action="{{ route('journals.update', $journal->id) }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                @method('PUT')
+
+                                <div class="row mb-3 align-items-center">
+                                    @if(auth()->user()->hasRole('Super-Admin'))
+                                        <div class="col-md-4 mb-3">
+                                            <label for="license_id" class="form-label">Pilih Lisensi</label>
+                                            <select name="license_id" id="license_id" class="form-select" disabled>
+                                                @foreach ($licenses as $license)
+                                                    <option value="{{ $license->id }}" 
+                                                        {{ $journal->license_id == $license->id ? 'selected' : '' }}>
+                                                        {{ $license->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <input type="hidden" name="license_id" value="{{ $journal->license_id }}">
+                                        </div>
                                     @endif
-                                </select>
-                        </td> --}}
-                        
-                        <td>
-                            <input type="number" step="0.01" 
-                                name="details[{{ $i }}][debit]" 
-                                class="form-control debit-input" 
-                                value="{{ old("details.$i.debit", $detail->debit) }}"
-                                {{ $detail->credit ? 'disabled' : '' }}>
 
-                            @if($detail->credit)
-                                <input type="hidden" name="details[{{ $i }}][debit]" value="{{ $detail->debit }}">
-                            @endif
-                        </td>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="journal_code" class="required">No Transaksi</label>
+                                        <input type="text" name="journal_code" 
+                                            class="form-control" value="{{ old('journal_code', $journal->journal_code) }}" readonly>
+                                    </div>
 
-                        
-                        <td>
-                            <input type="number" step="0.01" 
-                                name="details[{{ $i }}][credit]" 
-                                class="form-control credit-input" 
-                                value="{{ old("details.$i.credit", $detail->credit) }}"
-                                {{ $detail->debit ? 'disabled' : '' }}>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="transaction_date">Tanggal Transaksi</label>
+                                        <input type="date" name="transaction_date" class="form-control"
+                                            value="{{ old('transaction_date', $journal->transaction_date) }}" required>
+                                    </div>
+                                </div>
 
-                            @if($detail->debit)
-                                <input type="hidden" name="details[{{ $i }}][credit]" value="{{ $detail->credit }}">
-                            @endif
-                        </td>
-                        <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
-                                    <i class="ti ti-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                @endforeach
-            @endif
-        </tbody>
+                                <h5>Detail Akun</h5>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Akun</th>
+                                            <th>Deskripsi</th>
+                                            <th>User</th>
+                                            <th>Debit</th>
+                                            <th>Kredit</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detail-rows">
+                                        @if(isset($journal) && $journal->details)
+                                            @foreach ($journal->details as $i => $detail)
+                                                <tr>
+                                                    {{-- Pilih Akun --}}
+                                                    <td>
+                                                        <select name="details[{{ $i }}][account_id]" 
+                                                                class="form-select account-select" 
+                                                                data-row="{{ $i }}" required>
+                                                            <option value="{{ $detail->account_id }}" 
+                                                                    data-person-type="{{ $detail->account->person_type }}" 
+                                                                    selected>
+                                                                {{ $detail->account->account_code }} - {{ $detail->account->account_name }}
+                                                            </option>
+                                                        </select>
+                                                    </td>
 
-        <tfoot>
-            <tr>
-                <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-primary text-white">Tambah Baris</button></td>
-            </tr>
-            <tr>
-                <th colspan="3">Subtotal</th>
-                <th id="subtotal-debit">{{ $journal->details->sum('debit') }}</th>
-                <th id="subtotal-credit">{{ $journal->details->sum('credit') }}</th>
-                <th colspan="3"></th>
-            </tr>
-        </tfoot>
-    </table>
+                                                    {{-- Deskripsi --}}
+                                                    <td>
+                                                        <input type="text" 
+                                                            name="details[{{ $i }}][description]" 
+                                                            class="form-control"
+                                                            value="{{ old("details.$i.description", $detail->description) }}">
+                                                    </td>
 
-    <div id="balance-status" class="mt-2 fw-bold text-danger">❌ Tidak Seimbang</div>
+                                                    <td>
+                                                        <select name="details[{{ $i }}][person]" 
+                                                                class="form-control select2 user-select" 
+                                                                data-row="{{ $i }}" 
+                                                                data-selected="{{ $detail->person ?? '' }}">
+                                                            <option value="">-- Pilih User --</option>
+                                                            @php
+                                                                if ($detail->person_type === 'student') {
+                                                                    $users = $students;
+                                                                } elseif ($detail->person_type === 'employee') {
+                                                                    $users = $employees;
+                                                                } elseif ($detail->person_type === 'license') {
+                                                                    $users = $licenseList;
+                                                                } else {
+                                                                    $users = collect();
+                                                                }
+                                                            @endphp
+                                                            @foreach ($users as $u)
+                                                                <option value="{{ $u->id }}" {{ $u->id == $detail->person ? 'selected' : '' }}>
+                                                                    {{ $u->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
 
-    <div class="col-md-6 mb-3">
-            <label for="description">Keterangan</label>
-            <textarea name="description" class="form-control">{{ old('description', $journal->description) }}</textarea>
-    </div>
+                                                        @if($detail->person)
+                                                            <input type="hidden" name="details[{{ $i }}][person]" value="{{ $detail->person }}">
+                                                        @endif
+                                                    </td>
 
-    <div class="col-md-6 mb-3">
-        <label for="enclosure" class="form-label">Lampiran (PDF / Gambar)</label>
-        <input type="file" name="enclosure" class="form-control">
+                                                    {{-- <td>
+                                                            <select name="details[{{ $i }}][person]" 
+                                                                    class="form-select user-select" 
+                                                                    data-row="{{ $i }}" 
+                                                                    data-selected="{{ $detail->person_id }}">
+                                                                @if($detail->person)
+                                                                    <option value="{{ $detail->person_id }}" selected>
+                                                                        {{ $detail->person->name }}
+                                                                    </option>
+                                                                @endif
+                                                            </select>
+                                                    </td> --}}
+                                                    
+                                                    <td>
+                                                        <input type="number" step="0.01" 
+                                                            name="details[{{ $i }}][debit]" 
+                                                            class="form-control debit-input" 
+                                                            value="{{ old("details.$i.debit", $detail->debit) }}"
+                                                            {{ $detail->credit ? 'disabled' : '' }}>
 
-        @if($journal->enclosure)
-            <div class="mt-2">
-                <p>File saat ini:</p>
-                @if(\Illuminate\Support\Str::endsWith($journal->enclosure, ['.jpg', '.jpeg', '.png']))
-                    <img src="{{ asset('storage/'.$journal->enclosure) }}" alt="Enclosure" width="200">
-                @elseif(\Illuminate\Support\Str::endsWith($journal->enclosure, ['.pdf']))
-                    <a href="{{ asset('storage/'.$journal->enclosure) }}" target="_blank">Lihat PDF</a>
-                @endif
+                                                        @if($detail->credit)
+                                                            <input type="hidden" name="details[{{ $i }}][debit]" value="{{ $detail->debit }}">
+                                                        @endif
+                                                    </td>
+
+                                                    
+                                                    <td>
+                                                        <input type="number" step="0.01" 
+                                                            name="details[{{ $i }}][credit]" 
+                                                            class="form-control credit-input" 
+                                                            value="{{ old("details.$i.credit", $detail->credit) }}"
+                                                            {{ $detail->debit ? 'disabled' : '' }}>
+
+                                                        @if($detail->debit)
+                                                            <input type="hidden" name="details[{{ $i }}][credit]" value="{{ $detail->credit }}">
+                                                        @endif
+                                                    </td>
+                                                    <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
+                                                                <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @endif
+                                    </tbody>
+
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-primary text-white">Tambah Baris</button></td>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3">Subtotal</th>
+                                            <th id="subtotal-debit">{{ $journal->details->sum('debit') }}</th>
+                                            <th id="subtotal-credit">{{ $journal->details->sum('credit') }}</th>
+                                            <th colspan="3"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+
+                                @php
+                                    $isBalanced = $journal->details->sum('debit') == $journal->details->sum('credit');
+                                @endphp
+
+                                <div id="balance-status" 
+                                    class="mt-2 fw-bold {{ $isBalanced ? 'text-success' : 'text-danger' }}">
+                                    {{ $isBalanced ? '✅ Seimbang' : '❌ Tidak Seimbang' }}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                        <label for="description">Keterangan</label>
+                                        <textarea name="description" class="form-control">{{ old('description', $journal->description) }}</textarea>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="enclosure" class="form-label">Lampiran (PDF / Gambar)</label>
+                                    <input type="file" name="enclosure" class="form-control">
+
+                                    @if($journal->enclosure)
+                                        <div class="mt-2">
+                                            <p>File saat ini:</p>
+                                            @if(\Illuminate\Support\Str::endsWith($journal->enclosure, ['.jpg', '.jpeg', '.png']))
+                                                <img src="{{ asset('storage/'.$journal->enclosure) }}" alt="Enclosure" width="200">
+                                            @elseif(\Illuminate\Support\Str::endsWith($journal->enclosure, ['.pdf']))
+                                                <a href="{{ asset('storage/'.$journal->enclosure) }}" target="_blank">Lihat PDF</a>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary text-white">Update</button>
+                                </div>
+                                
+                                @if(!auth()->user()->hasRole('Super-Admin'))
+                                        <input type="hidden" id="activeLicenseId" value="{{ $activeLicenseId }}">
+                                @endif
+                            
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-        @endif
-    </div>
-
-        <div class="text-end">
-            <button type="submit" class="btn btn-primary text-white">Update</button>
         </div>
-        
-    @if(!auth()->user()->hasRole('Super-Admin'))
-            <input type="hidden" id="activeLicenseId" value="{{ $activeLicenseId }}">
-    @endif
-    
-    </form>
-</div>
+    </div>
 @endsection
-
 
 @push('js')
 
 <script>
 $(document).ready(function () {
-    $('.select2').select2({ placeholder: "-- Pilih --", width: '100%' });
+    $('.select2').select2({ width: '100%' });
 
     let accountsData = [];
 
@@ -376,11 +417,12 @@ $(document).ready(function () {
         $('#subtotal-debit').text(totalDebit.toLocaleString('id-ID'));
         $('#subtotal-credit').text(totalCredit.toLocaleString('id-ID'));
 
-        if (totalDebit === totalCredit && totalDebit > 0) {
-            $('#balance-status').text('✅ Seimbang').css('color', 'green');
-        } else {
-            $('#balance-status').text('❌ Tidak Seimbang').css('color', 'red');
-        }
+        const isBalanced = totalDebit === totalCredit;
+
+        $('#balance-status')
+            .text(isBalanced ? '✅ Seimbang' : '❌ Tidak Seimbang')
+            .toggleClass('text-success', isBalanced)
+            .toggleClass('text-danger', !isBalanced);
     }
 
     /** 🔹 Event listener input debit/kredit */

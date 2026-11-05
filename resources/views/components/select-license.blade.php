@@ -13,7 +13,7 @@
         <input type="hidden" name="license_id" value="{{ $licenses->first()->id }}">
     @else
         {{-- Dropdown normal --}}
-        <select name="license_id" id="license_id" class="form-select @error('license_id') is-invalid @enderror" required>
+        <select name="license_id" id="license_id" class="form-select select2 @error('license_id') is-invalid @enderror" required>
             <option value="">-- Pilih Lisensi --</option>
             @foreach ($licenses as $license)
                 <option value="{{ $license->id }}"
@@ -28,3 +28,8 @@
         @enderror
     @endif
 </div>
+<script>
+$(document).ready(function () {
+    $('.select2').select2({ width: '100%' });
+});
+</script>
