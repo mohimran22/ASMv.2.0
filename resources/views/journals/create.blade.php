@@ -127,8 +127,8 @@
                                                         <option value="">-- Pilih User --</option>
                                                     </select>
                                                 </td>
-                                                <td><input type="number" step="0.01" name="details[0][debit]" class="form-control debit-input"></td>
-                                                <td><input type="number" step="0.01" name="details[0][credit]" class="form-control credit-input"></td>
+                                                <td><input type="text" inputmode="decimal" autocomplete="off" name="details[0][debit]" class="form-control debit-input"></td>
+                                                <td><input type="text" inputmode="decimal" autocomplete="off" name="details[0][credit]" class="form-control credit-input"></td>
                                                 <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
                                                         <i class="ti ti-trash"></i>
                                                     </button>
@@ -194,6 +194,38 @@ $(document).ready(function () {
     $('.select2').select2({ width: '100%' });
 
     let accountsData = [];
+
+    /** Format Rupiah: 1.234.567 atau 1.234.567,5 (koma = desimal) */
+    function parseRp(v) {
+        if (v === null || v === undefined) return 0;
+        const n = parseFloat(String(v).replace(/\./g, '').replace(',', '.'));
+        return isNaN(n) ? 0 : n;
+    }
+
+    function formatRpInput(el) {
+        const raw = el.value;
+        const pos = el.selectionStart ?? raw.length;
+        const sig = raw.slice(0, pos).replace(/[^\d,]/g, '').length; // digit/koma sebelum kursor
+        const parts = raw.replace(/[^\d,]/g, '').split(',');
+        let intPart = parts[0].replace(/^0+(?=\d)/, '');
+        const dec = parts.length > 1 ? parts.slice(1).join('').slice(0, 2) : null;
+        if (intPart === '' && dec !== null) intPart = '0';
+        intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        const out = intPart + (dec !== null ? ',' + dec : '');
+        el.value = out;
+
+        let newPos = out.length;
+        if (sig === 0) {
+            newPos = 0;
+        } else {
+            let count = 0;
+            for (let i = 0; i < out.length; i++) {
+                if (/[\d,]/.test(out[i])) count++;
+                if (count >= sig) { newPos = i + 1; break; }
+            }
+        }
+        try { el.setSelectionRange(newPos, newPos); } catch (e) {}
+    }
 
     /** ======================================================
      *  1. Ambil akun & kode jurnal berdasarkan lisensi aktif
@@ -349,8 +381,8 @@ $(document).ready(function () {
                             class="form-select user-select" 
                             data-row="${rowCount}"></select>
                 </td>
-                <td><input type="number" step="0.01" name="details[${rowCount}][debit]" class="form-control debit-input"></td>
-                <td><input type="number" step="0.01" name="details[${rowCount}][credit]" class="form-control credit-input"></td>
+                <td><input type="text" inputmode="decimal" autocomplete="off" name="details[${rowCount}][debit]" class="form-control debit-input"></td>
+                <td><input type="text" inputmode="decimal" autocomplete="off" name="details[${rowCount}][credit]" class="form-control credit-input"></td>
                 <td>
                     <button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
                         <i class="ti ti-trash"></i>
@@ -429,8 +461,8 @@ $(document).ready(function () {
         let totalDebit = 0, totalCredit = 0;
 
         $('#detail-rows tr').each(function() {
-            const debit  = parseFloat($(this).find('.debit-input').val()) || 0;
-            const credit = parseFloat($(this).find('.credit-input').val()) || 0;
+            const debit  = parseRp($(this).find('.debit-input').val());
+            const credit = parseRp($(this).find('.credit-input').val());
 
             totalDebit  += debit;
             totalCredit += credit;
@@ -451,8 +483,7 @@ $(document).ready(function () {
      * 12. Event listener input debit/kredit
      * ====================================================== */
     $(document).on('input', '.debit-input, .credit-input', function() {
-        let val = parseFloat($(this).val()) || 0;
-        $(this).val(Math.abs(val));
+        formatRpInput(this);
 
         // Pastikan hanya satu kolom terisi
         if ($(this).hasClass('debit-input')) {
@@ -471,13 +502,19 @@ $(document).ready(function () {
         let totalDebit = 0, totalCredit = 0;
 
         $('#detail-rows tr').each(function() {
-            totalDebit  += parseFloat($(this).find('.debit-input').val()) || 0;
-            totalCredit += parseFloat($(this).find('.credit-input').val()) || 0;
+            totalDebit  += parseRp($(this).find('.debit-input').val());
+            totalCredit += parseRp($(this).find('.credit-input').val());
         });
 
         if (totalDebit !== totalCredit) {
             e.preventDefault();
             alert('Transaksi tidak seimbang! Jumlah Debit dan Kredit harus sama.');
+        } else {
+            // Kirim angka mentah ke server (tanpa titik pemisah)
+            $('.debit-input, .credit-input').each(function () {
+                const v = $(this).val();
+                if (v !== '') $(this).val(String(parseRp(v)));
+            });
         }
     });
 });

@@ -1,6 +1,21 @@
 @extends('tablar::page')
 
 @section('content')
+    <style>
+        /* Select2 menyembunyikan <select> asli (1px, absolute). Pastikan aturan lebar
+           .jurnal-table .form-select tidak ikut melebarkan select tersembunyi itu,
+           karena itu yang membuat halaman bisa scroll horizontal. */
+        .jurnal-table-wrapper { position: relative; }
+        .jurnal-table td { position: relative; }
+        .jurnal-table td select.select2-hidden-accessible {
+            left: 0;
+            top: 0;
+            width: 1px !important;
+            height: 1px !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+    </style>
     <div class="page-header d-print-none mb-4">
         <div class="container-xl">
             <div class="row align-items-center">
@@ -69,130 +84,119 @@
                                 </div>
 
                                 <h5>Detail Akun</h5>
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Akun</th>
-                                            <th>Deskripsi</th>
-                                            <th>User</th>
-                                            <th>Debit</th>
-                                            <th>Kredit</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detail-rows">
-                                        @if(isset($journal) && $journal->details)
-                                            @foreach ($journal->details as $i => $detail)
-                                                <tr>
-                                                    {{-- Pilih Akun --}}
-                                                    <td>
-                                                        <select name="details[{{ $i }}][account_id]" 
-                                                                class="form-select account-select" 
-                                                                data-row="{{ $i }}" required>
-                                                            <option value="{{ $detail->account_id }}" 
-                                                                    data-person-type="{{ $detail->account->person_type }}" 
-                                                                    selected>
-                                                                {{ $detail->account->account_code }} - {{ $detail->account->account_name }}
-                                                            </option>
-                                                        </select>
-                                                    </td>
-
-                                                    {{-- Deskripsi --}}
-                                                    <td>
-                                                        <input type="text" 
-                                                            name="details[{{ $i }}][description]" 
-                                                            class="form-control"
-                                                            value="{{ old("details.$i.description", $detail->description) }}">
-                                                    </td>
-
-                                                    <td>
-                                                        <select name="details[{{ $i }}][person]" 
-                                                                class="form-control select2 user-select" 
-                                                                data-row="{{ $i }}" 
-                                                                data-selected="{{ $detail->person ?? '' }}">
-                                                            <option value="">-- Pilih User --</option>
-                                                            @php
-                                                                if ($detail->person_type === 'student') {
-                                                                    $users = $students;
-                                                                } elseif ($detail->person_type === 'employee') {
-                                                                    $users = $employees;
-                                                                } elseif ($detail->person_type === 'license') {
-                                                                    $users = $licenseList;
-                                                                } else {
-                                                                    $users = collect();
-                                                                }
-                                                            @endphp
-                                                            @foreach ($users as $u)
-                                                                <option value="{{ $u->id }}" {{ $u->id == $detail->person ? 'selected' : '' }}>
-                                                                    {{ $u->name }}
+                                <div class="jurnal-table-wrapper">
+                                    <small class="text-muted d-md-none d-block mb-1">Geser ke samping untuk melihat semua kolom →</small>
+                                    <table class="table table-bordered jurnal-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Akun</th>
+                                                <th>Deskripsi</th>
+                                                <th>User</th>
+                                                <th>Debit</th>
+                                                <th>Kredit</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detail-rows">
+                                            @if(isset($journal) && $journal->details)
+                                                @foreach ($journal->details as $i => $detail)
+                                                        @php $rp = fn($v) => rtrim(rtrim(number_format((float) $v, 2, ',', '.'), '0'), ','); @endphp
+                                                    <tr>
+                                                        {{-- Pilih Akun --}}
+                                                        <td>
+                                                            <select name="details[{{ $i }}][account_id]" 
+                                                                    class="form-select account-select" 
+                                                                    data-row="{{ $i }}" required>
+                                                                <option value="{{ $detail->account_id }}" 
+                                                                        data-person-type="{{ $detail->account->person_type }}" 
+                                                                        selected>
+                                                                    {{ $detail->account->account_code }} - {{ $detail->account->account_name }}
                                                                 </option>
-                                                            @endforeach
-                                                        </select>
-
-                                                        @if($detail->person)
-                                                            <input type="hidden" name="details[{{ $i }}][person]" value="{{ $detail->person }}">
-                                                        @endif
-                                                    </td>
-
-                                                    {{-- <td>
-                                                            <select name="details[{{ $i }}][person]" 
-                                                                    class="form-select user-select" 
-                                                                    data-row="{{ $i }}" 
-                                                                    data-selected="{{ $detail->person_id }}">
-                                                                @if($detail->person)
-                                                                    <option value="{{ $detail->person_id }}" selected>
-                                                                        {{ $detail->person->name }}
-                                                                    </option>
-                                                                @endif
                                                             </select>
-                                                    </td> --}}
-                                                    
-                                                    <td>
-                                                        <input type="number" step="0.01" 
-                                                            name="details[{{ $i }}][debit]" 
-                                                            class="form-control debit-input" 
-                                                            value="{{ old("details.$i.debit", $detail->debit) }}"
-                                                            {{ $detail->credit ? 'disabled' : '' }}>
+                                                        </td>
 
-                                                        @if($detail->credit)
-                                                            <input type="hidden" name="details[{{ $i }}][debit]" value="{{ $detail->debit }}">
-                                                        @endif
-                                                    </td>
+                                                        {{-- Deskripsi --}}
+                                                        <td>
+                                                            <input type="text" 
+                                                                name="details[{{ $i }}][description]" 
+                                                                class="form-control"
+                                                                value="{{ old("details.$i.description", $detail->description) }}">
+                                                        </td>
 
-                                                    
-                                                    <td>
-                                                        <input type="number" step="0.01" 
-                                                            name="details[{{ $i }}][credit]" 
-                                                            class="form-control credit-input" 
-                                                            value="{{ old("details.$i.credit", $detail->credit) }}"
-                                                            {{ $detail->debit ? 'disabled' : '' }}>
+                                                        <td>
+                                                            <select name="details[{{ $i }}][person]" 
+                                                                    class="form-control select2 user-select" 
+                                                                    data-row="{{ $i }}" 
+                                                                    data-selected="{{ $detail->person ?? '' }}"
+                                                                    data-selected-name="{{ $detail->person ? $detail->person_name : '' }}">
+                                                                <option value="">-- Pilih User --</option>
+                                                                @if($detail->person)
+                                                                    {{-- Tampil langsung dari server; JS mengganti dengan daftar lengkap setelah AJAX selesai --}}
+                                                                    <option value="{{ $detail->person }}" selected>{{ $detail->person_name }}</option>
+                                                                @endif
+                                                                {{-- Opsi user diisi oleh JS (renderUserOptions) sesuai person_type akun --}}
+                                                            </select>
+                                                        </td>
 
-                                                        @if($detail->debit)
-                                                            <input type="hidden" name="details[{{ $i }}][credit]" value="{{ $detail->credit }}">
-                                                        @endif
-                                                    </td>
-                                                    <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
-                                                                <i class="ti ti-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        @endif
-                                    </tbody>
+                                                        {{-- <td>
+                                                                <select name="details[{{ $i }}][person]" 
+                                                                        class="form-select user-select" 
+                                                                        data-row="{{ $i }}" 
+                                                                        data-selected="{{ $detail->person_id }}">
+                                                                    @if($detail->person)
+                                                                        <option value="{{ $detail->person_id }}" selected>
+                                                                            {{ $detail->person->name }}
+                                                                        </option>
+                                                                    @endif
+                                                                </select>
+                                                        </td> --}}
+                                                        
+                                                        <td>
+                                                            <input type="text" inputmode="decimal" autocomplete="off" 
+                                                                name="details[{{ $i }}][debit]" 
+                                                                class="form-control debit-input" 
+                                                                value="{{ $rp(old("details.$i.debit", $detail->debit)) }}"
+                                                                {{ $detail->credit ? 'disabled' : '' }}>
 
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-primary text-white">Tambah Baris</button></td>
-                                        </tr>
-                                        <tr>
-                                            <th colspan="3">Subtotal</th>
-                                            <th id="subtotal-debit">{{ $journal->details->sum('debit') }}</th>
-                                            <th id="subtotal-credit">{{ $journal->details->sum('credit') }}</th>
-                                            <th colspan="3"></th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                                                            @if($detail->credit)
+                                                                <input type="hidden" name="details[{{ $i }}][debit]" value="{{ $detail->debit }}">
+                                                            @endif
+                                                        </td>
 
+                                                        
+                                                        <td>
+                                                            <input type="text" inputmode="decimal" autocomplete="off" 
+                                                                name="details[{{ $i }}][credit]" 
+                                                                class="form-control credit-input" 
+                                                                value="{{ $rp(old("details.$i.credit", $detail->credit)) }}"
+                                                                {{ $detail->debit ? 'disabled' : '' }}>
+
+                                                            @if($detail->debit)
+                                                                <input type="hidden" name="details[{{ $i }}][credit]" value="{{ $detail->credit }}">
+                                                            @endif
+                                                        </td>
+                                                        <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
+                                                                    <i class="ti ti-trash"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            @endif
+                                        </tbody>
+
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="6"><button type="button" id="add-row" class="btn btn-sm btn-primary text-white">Tambah Baris</button></td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="3">Subtotal</th>
+                                                <th id="subtotal-debit">{{ $journal->details->sum('debit') }}</th>
+                                                <th id="subtotal-credit">{{ $journal->details->sum('credit') }}</th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
                                 @php
                                     $isBalanced = $journal->details->sum('debit') == $journal->details->sum('credit');
                                 @endphp
@@ -248,6 +252,40 @@ $(document).ready(function () {
 
     let accountsData = [];
 
+    /** Format Rupiah: 1.234.567 atau 1.234.567,5 (koma = desimal) */
+    function parseRp(v) {
+        if (v === null || v === undefined) return 0;
+        const n = parseFloat(String(v).replace(/\./g, '').replace(',', '.'));
+        return isNaN(n) ? 0 : n;
+    }
+
+    function formatRpInput(el) {
+        const raw = el.value;
+        const pos = el.selectionStart ?? raw.length;
+        const sig = raw.slice(0, pos).replace(/[^\d,]/g, '').length; // digit/koma sebelum kursor
+        const parts = raw.replace(/[^\d,]/g, '').split(',');
+        let intPart = parts[0].replace(/^0+(?=\d)/, '');
+        const dec = parts.length > 1 ? parts.slice(1).join('').slice(0, 2) : null;
+        if (intPart === '' && dec !== null) intPart = '0';
+        intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        const out = intPart + (dec !== null ? ',' + dec : '');
+        el.value = out;
+
+        let newPos = out.length;
+        if (sig === 0) {
+            newPos = 0;
+        } else {
+            let count = 0;
+            for (let i = 0; i < out.length; i++) {
+                if (/[\d,]/.test(out[i])) count++;
+                if (count >= sig) { newPos = i + 1; break; }
+            }
+        }
+        try { el.setSelectionRange(newPos, newPos); } catch (e) {}
+    }
+
+    calculateSubtotals(); // format subtotal saat halaman dibuka
+
     /** 🔹 Ambil akun berdasarkan lisensi aktif */
     function loadAccountsByLicense(licenseId) {
         if (!licenseId) return;
@@ -280,28 +318,69 @@ $(document).ready(function () {
     }
 
     /** 🔹 Render user sesuai person_type */
-    function renderUserOptions($select, personType, selected = null) {
+    const userCache = {};
+    const userUrlMap = {
+        student: '/get-students',
+        employee: '/get-employees',
+        licenseholder: '/get-licenseholders',
+        license: '/get-licenses'
+    };
+
+    /** Select2 user dengan fitur input manual (sama seperti form create) */
+    function initUserSelect2($select) {
+        if ($select.hasClass('select2-hidden-accessible')) {
+            $select.select2('destroy');
+        }
+        $select.select2({
+            placeholder: '-- Input manual jika tidak ada User --',
+            width: '100%',
+            tags: true,
+            createTag: function (params) {
+                const term = $.trim(params.term);
+                if (term === '') return null;
+                return { id: term, text: term, newOption: true };
+            }
+        });
+    }
+
+    function fillUserOptions($select, list, selected) {
+        const hasSelected = selected !== null && selected !== undefined && selected !== '';
+        let found = false;
+
         $select.empty().append('<option value="">-- Pilih User --</option>');
 
-        if (!personType) return;
+        $.each(list, function (_, user) {
+            const isSelected = hasSelected && String(selected) === String(user.id);
+            if (isSelected) found = true;
+            $select.append($('<option>').val(user.id).text(user.name).prop('selected', isSelected));
+        });
 
-        let urlMap = {
-            student: '/get-students',
-            employee: '/get-employees',
-            licenseholder: '/get-licenseholders',
-            license: '/get-licenses'
-        };
+        // Nilai lama tidak ada di daftar (mis. user input manual) → tetap tampilkan
+        if (hasSelected && !found) {
+            const label = $select.attr('data-selected-name') || selected;
+            $select.append($('<option>').val(selected).text(label).prop('selected', true));
+        }
 
-        if (!urlMap[personType]) return;
+        initUserSelect2($select);
+    }
 
-        $.get(urlMap[personType], function (data) {
-            $.each(data, function (_, user) {
-                $select.append(
-                    `<option value="${user.id}" ${selected == user.id ? 'selected' : ''}>
-                        ${user.name}
-                     </option>`
-                );
-            });
+    /** 🔹 Render user sesuai person_type */
+    function renderUserOptions($select, personType, selected = null) {
+        const url = userUrlMap[personType];
+
+        if (!url) {
+            fillUserOptions($select, [], selected);
+            return;
+        }
+
+        if (userCache[personType]) {
+            fillUserOptions($select, userCache[personType], selected);
+            return;
+        }
+
+        $.get(url, function (data) {
+            userCache[personType] = data;
+            fillUserOptions($select, data, selected);
         });
     }
 
@@ -318,8 +397,6 @@ $(document).ready(function () {
     $('.account-select').each(function () {
         let selectedVal = $(this).val();
         let row = $(this).data('row');
-        let $userSelect = $(`.user-select[data-row="${row}"]`);
-        let selectedUser = $userSelect.data('selected');
 
         if (selectedVal) {
             $(this).prop('disabled', false);
@@ -327,17 +404,8 @@ $(document).ready(function () {
                 `<input type="hidden" name="${$(this).attr('name')}" value="${selectedVal}">`
             );
         }
-
-        if (selectedUser) {
-            $userSelect.prop('disabled', false);
-            $userSelect.after(
-                `<input type="hidden" name="${$userSelect.attr('name')}" value="${selectedUser}">`
-            );
-
-            // 🔹 render user lama biar tetap tampil di dropdown
-            let personType = $(this).find(':selected').data('person-type');
-            renderUserOptions($userSelect, personType, selectedUser);
-        }
+        // Select user TIDAK diberi hidden input: input hidden bernama sama akan
+        // menimpa nilai select saat submit, sehingga user tidak bisa diubah.
     });
 
     /** 🔹 Ganti lisensi → load akun baru */
@@ -357,7 +425,7 @@ $(document).ready(function () {
     $('.user-select').each(function () {
         let $select = $(this);
         let row = $select.data('row');
-        let selectedUser = $select.data('selected');
+        let selectedUser = $select.attr('data-selected'); // attr agar tidak dikonversi jadi angka
         let personType = $(`.account-select[data-row="${row}"] option:selected`).data('person-type');
 
         // Render ulang user sesuai personType
@@ -381,8 +449,8 @@ $(document).ready(function () {
                             class="form-select user-select" 
                             data-row="${rowCount}"></select>
                 </td>
-                <td><input type="number" step="0.01" name="details[${rowCount}][debit]" class="form-control debit-input"></td>
-                <td><input type="number" step="0.01" name="details[${rowCount}][credit]" class="form-control credit-input"></td>
+                <td><input type="text" inputmode="decimal" autocomplete="off" name="details[${rowCount}][debit]" class="form-control debit-input"></td>
+                <td><input type="text" inputmode="decimal" autocomplete="off" name="details[${rowCount}][credit]" class="form-control credit-input"></td>
                 <td><button type="button" class="btn btn-sm btn-danger remove-row" title="Hapus">
                         <i class="ti ti-trash"></i>
                     </button>
@@ -395,6 +463,9 @@ $(document).ready(function () {
         // Isi opsi akun
         const $newAccountSelect = $('#detail-rows tr:last .account-select');
         renderAccountOptions($newAccountSelect);
+
+        // Siapkan select user (dengan input manual)
+        initUserSelect2($('#detail-rows tr:last .user-select'));
     });
 
     /** 🔹 Hapus baris */
@@ -407,8 +478,8 @@ $(document).ready(function () {
     function calculateSubtotals() {
         let totalDebit = 0, totalCredit = 0;
         $('#detail-rows tr').each(function() {
-            const debit  = parseFloat(($(this).find('.debit-input').val() || '0').replace(/,/g, '')) || 0;
-            const credit = parseFloat(($(this).find('.credit-input').val() || '0').replace(/,/g, '')) || 0;
+            const debit  = parseRp($(this).find('.debit-input').val());
+            const credit = parseRp($(this).find('.credit-input').val());
 
             totalDebit  += debit;
             totalCredit += credit;
@@ -427,8 +498,7 @@ $(document).ready(function () {
 
     /** 🔹 Event listener input debit/kredit */
     $(document).on('input', '.debit-input, .credit-input', function() {
-        const val = parseFloat($(this).val());
-        if (val < 0) $(this).val('');
+        formatRpInput(this);
         if ($(this).hasClass('debit-input')) {
             $(this).closest('tr').find('.credit-input').val('');
         } else {
@@ -441,18 +511,22 @@ $(document).ready(function () {
     $('form').on('submit', function (e) {
         let totalDebit = 0, totalCredit = 0;
         $('#detail-rows tr').each(function() {
-            totalDebit  += parseFloat($(this).find('.debit-input').val())  || 0;
-            totalCredit += parseFloat($(this).find('.credit-input').val()) || 0;
+            totalDebit  += parseRp($(this).find('.debit-input').val());
+            totalCredit += parseRp($(this).find('.credit-input').val());
         });
 
         if (totalDebit !== totalCredit) {
             e.preventDefault();
             alert('Transaksi tidak balance! Jumlah Debit dan Kredit harus sama.');
+        } else {
+            // Kirim angka mentah ke server (tanpa titik pemisah)
+            $('.debit-input, .credit-input').each(function () {
+                const v = $(this).val();
+                if (v !== '') $(this).val(String(parseRp(v)));
+            });
         }
     });
 });
 </script>
 
 @endpush
-
-

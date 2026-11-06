@@ -368,7 +368,7 @@ public function store(StoreAccountingJournalRequest $request)
         ->select('id', 'name')
         ->get();
 
-    $journal->load('details');
+    $journal->load('details.account');
 
     return view('journals.edit', compact('journal', 'activeLicenseId', 'licenses', 'accounts', 'students', 'employees', 'licenseholders', 'licenseList'));
 }
